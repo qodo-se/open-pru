@@ -299,4 +299,4 @@ TM_TS2_GEN_CFG2_S4_MX_MAX                            .set      (0x000000FFU)
 ;/* CAP_EN_CFG */
 
 TM_CAP_EN_CFG_NEW_MASK                               .set      (0x000003FFU)
-TM_CAP_EN_CFG_NEW_SHIFT                              .set      (0x00000000
+TM_CAP_EN_CFG_NEW_SHIFT                              .set      (0x00000000U)
