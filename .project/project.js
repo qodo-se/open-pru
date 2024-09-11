@@ -41,6 +41,7 @@ if(argv.target == "clean") {
 else {
     common.setGenBuildFilesMode(argv.target);
     common.setInstrumentationMode(argv.instrumentation);
+    common.setMcuPlusSdkPath(argv.mcu_plus_sdk_path);
     for(device of argv.device) {
         console.log(`Generating build files for ${device} in ${argv.target} mode ...`);
         common.genBuildfiles(device);

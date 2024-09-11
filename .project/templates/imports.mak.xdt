@@ -3,7 +3,7 @@
     deviceName = args.utils.getProjectSpecDevice(args.device);
 %%}
 
-MCU_PLUS_SDK_PATH ?= C:\ti\mcu_plus_sdk;
+MCU_PLUS_SDK_PATH ?= `args.common.getMcuPlusSdkPath()`
 DEVICE ?= am64x
 ifeq ($(OS),Windows_NT)
     TOOLS_PATH?=C:/ti

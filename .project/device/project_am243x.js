@@ -11,7 +11,8 @@ const device_defines = {
 };
 
 const example_file_list = [
-    
+    "examples/empty/.project/project.js",
+    "examples/empty/firmware/.project/project.js"
 ];
 
 function getProjectSpecCpu(cpu) {

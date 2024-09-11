@@ -1,4 +1,7 @@
 OPEN_PRU_PATH ?= $(abspath .)
+# Default mcu_plus_sdk path
+MCU_PLUS_SDK_PATH ?= C:\ti\mcu_plus_sdk;
+
 include imports.mak
 
 # Default device
@@ -154,7 +157,7 @@ docs-clean:
 	$(MAKE) -C docs_src/docs/api_guide clean DEVICE=$(DEVICE) DOC_COMBO=$(DOC_COMBO)
 
 gen-buildfiles:
-	$(NODE) ./.project/project.js --device $(DEVICE) --target $(GEN_BUILDFILES_TARGET) --instrumentation $(INSTRUMENTATION_MODE)
+	$(NODE) ./.project/project.js --device $(DEVICE) --target $(GEN_BUILDFILES_TARGET) --instrumentation $(INSTRUMENTATION_MODE) --mcu_plus_sdk_path $(MCU_PLUS_SDK_PATH)
 
 gen-buildfiles-clean:
 	$(NODE) ./.project/project.js --device $(DEVICE) --target clean
