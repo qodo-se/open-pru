@@ -81,7 +81,6 @@ function getComponentProperty() {
     property.isInternal = false;
     property.description = "R5F EMPTY PRU IO Project"
     property.buildOptionCombos = buildOptionCombos;
-    property.isSkipTopLevelBuild = true;
     property.skipUpdatingTirex = true;
 
     return property;

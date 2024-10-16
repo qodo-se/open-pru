@@ -6,6 +6,8 @@ docs/api_guide_*
 docs/datasheet*
 *.out
 *.out*
+*.xml
+*.obj
 *.profdata
 *.map
 *.zip

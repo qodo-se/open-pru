@@ -39,8 +39,6 @@ const lflags = {
     ],
 };
 
-const syscfgfile = "../example.syscfg";
-
 
 const templates_pru =
 [
@@ -139,7 +137,6 @@ function getComponentProperty() {
     property.buildOptionCombos = buildOptionCombos;
     property.pru_main_file = "main";
     property.pru_linker_file = "linker";
-    property.isSkipTopLevelBuild = true;
     property.skipUpdatingTirex = true;
 
     return property;
@@ -154,7 +151,6 @@ function getComponentBuildProperty(buildOption) {
     build_property.includes = includes;
     build_property.lflags = lflags;
     build_property.templates = templates_pru;
-    build_property.syscfgfile = syscfgfile;
     build_property.projecspecFileAction = "copy";
     build_property.skipMakefileCcsBootimageGen = true;
     build_property.ccsPruPostBuildSteps = getccsPruPostBuildSteps(buildOption.cpu, buildOption.board);

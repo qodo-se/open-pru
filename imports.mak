@@ -1,5 +1,5 @@
 
-MCU_PLUS_SDK_PATH ?= C:\ti\mcu_plus_sdk;
+MCU_PLUS_SDK_PATH ?= C:\ti\mcu_plus_sdk
 DEVICE ?= am64x
 ifeq ($(OS),Windows_NT)
     TOOLS_PATH?=C:/ti
@@ -45,11 +45,12 @@ endif
 CGT_TI_PRU_PATH=$(TOOLS_PATH)/ti-cgt-pru_2.3.3
 CGT_TI_ARM_CLANG_PATH=$(CCS_PATH)/tools/compiler/ti-cgt-armllvm_4.0.0.LTS
 ifeq ($(wildcard $(CGT_TI_ARM_CLANG_PATH)),)
-    CGT_TI_ARM_CLANG_PATH=$(TOOLS_PATH)/ti-cgt-armllvm_4.0.0.LTS
+    CGT_TI_ARM_CLANG_PATH=$(TOOLS_PATH)/ti-cgt-armllvm_4.0.1.LTS
 endif
 CCS_NODE = $(CCS_PATH)/tools/node/node
-SYSCFG_PATH ?= $(TOOLS_PATH)/sysconfig_1.21.0
+SYSCFG_PATH ?= $(TOOLS_PATH)/sysconfig_1.21.2
 SYSCFG_CLI_PATH ?= $(SYSCFG_PATH)
 SYSCFG_NODE = $(SYSCFG_PATH)/nodejs/node
 SYSCFG_NWJS = $(SYSCFG_PATH)/nw/nw
 SYSCFG_SDKPRODUCT=$(MCU_PLUS_SDK_PATH)/.metadata/product.json
+SYSCFG_MCU_PLUS_SDK_PRODUCT=$(OPEN_PRU_PATH)/.metadata/product.json
