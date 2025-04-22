@@ -9,6 +9,7 @@ This example acts as a getting started point for PRU firmware development in ass
  Parameter      | Value
  ---------------|-----------
  ICSSG          | ICSSG0 - PRU0, PRU1, RTU0, RTU1, TX_PRU0,TX_PRU1
+ ICSSM          | ICSSM0 - PRU0, PRU1, ICSSM1 (only in am261x) - PRU0, PRU1 
  Toolchain      | pru-cgt
  Board          | am64x-evm, am243x-evm, am243x-lp, am261x-lp, am261x-som, am263px-cc, am263px-lp, am263x-cc, am263x-lp
  Example folder | examples/pru_io/empty/
