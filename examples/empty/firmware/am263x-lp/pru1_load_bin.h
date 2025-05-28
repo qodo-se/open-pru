@@ -1,4 +1,3 @@
-
 /*
  *  Copyright (C) 2024 Texas Instruments Incorporated
  *
@@ -32,14 +31,5 @@
  */
 
 const uint32_t PRU1Firmware_0[] = {
-0x2effbb80,
-0x240100e2,
-0x81280b82,
-0x241234c2,
-0x24567882,
-0x24000483,
-0x80833982,
-0x80833802,
-0x80831c82,
 0x2a000000};
 

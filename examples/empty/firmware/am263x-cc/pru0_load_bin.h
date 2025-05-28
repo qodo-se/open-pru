@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2025 Texas Instruments Incorporated
+ *  Copyright (C) 2024 Texas Instruments Incorporated
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions
@@ -31,21 +31,5 @@
  */
 
 const uint32_t PRU0Firmware_0[] = {
-0x2effbb80,
-0x240100e2,
-0x81280b82,
-0x243b9ac5,
-0x24ca0085,
-0x0501e5e5,
-0x6f00e5ff,
-0x2400201f,
-0x7f0000fb,
-0x2a000000,
-0x241234c2,
-0x24567882,
-0x24000083,
-0x80833882,
-0x80833902,
-0x80831c82,
 0x2a000000};
 
