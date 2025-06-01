@@ -13,7 +13,10 @@ const device_defines = {
 const example_file_list = [
     /*NOTE: Always add PRU firware project first to ensure R5F picks latest firmware header when all examples are built at once using makefile*/
     "examples/empty/firmware/.project/project.js",
-    "examples/empty/.project/project.js"
+    "examples/empty/.project/project.js",
+    "examples/pru_emif/firmware/pru1/.project/project.js",
+    "examples/pru_emif/firmware/pru0/.project/project.js",
+    "examples/pru_emif/pru_emif_app/.project/project.js"
 ];
 
 function getProjectSpecCpu(cpu) {
