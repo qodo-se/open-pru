@@ -71,7 +71,7 @@ function getmakefilePruPostBuildSteps(cpu, board)
     }
 
     return  [
-        "$(CG_TOOL_ROOT)/bin/hexpru --diag_wrap=off --array --array:name_prefix="+ core + "Firmware  -o "+ core.toLocaleLowerCase() + "_load_bin.h " + "empty" + "_" + board + "_" + cpu + "_fw_ti-pru-cgt.out;"+ 
+        "$(CG_TOOL_ROOT)/bin/hexpru --diag_wrap=off --array --array:name_prefix="+ core + "Firmware  -o "+ core.toLocaleLowerCase() + "_load_bin.h " + property.name + "_" + board + "_" + cpu + "_fw_ti-pru-cgt.out;"+ 
         "$(CAT)  ${MCU_PLUS_SDK_PATH}/source/pru_io/firmware/pru_load_bin_copyright.h "+ core.toLocaleLowerCase() + "_load_bin.h > ${OPEN_PRU_PATH}/examples/empty/firmware/"+ board + "/" +core.toLocaleLowerCase() + "_load_bin.h ;"+ 
         "$(RM) "+ core.toLocaleLowerCase() + "_load_bin.h;"
     ]; 
@@ -91,7 +91,7 @@ function getccsPruPostBuildSteps(cpu, board)
     }
 
     return [
-        "$(CG_TOOL_ROOT)/bin/hexpru --diag_wrap=off --array --array:name_prefix="+ core + "Firmware  -o "+ core.toLocaleLowerCase() + "_load_bin.h " + "empty" + "_" + board + "_" + cpu + "_fw_ti-pru-cgt.out;"+ 
+        "$(CG_TOOL_ROOT)/bin/hexpru --diag_wrap=off --array --array:name_prefix="+ core + "Firmware  -o "+ core.toLocaleLowerCase() + "_load_bin.h " + property.name + "_" + board + "_" + cpu + "_fw_ti-pru-cgt.out;"+ 
         "if ${CCS_HOST_OS} == linux cat ${MCU_PLUS_SDK_PATH}/source/pru_io/firmware/pru_load_bin_copyright.h "+ core.toLocaleLowerCase() + "_load_bin.h > ${OPEN_PRU_PATH}/examples/empty/firmware/"+ board + "/" +core.toLocaleLowerCase() + "_load_bin.h ;"+ 
         "if ${CCS_HOST_OS} == linux rm "+ core.toLocaleLowerCase() + "_load_bin.h;"+
         "if ${CCS_HOST_OS} == win32  $(CCS_INSTALL_DIR)/utils/cygwin/cat ${MCU_PLUS_SDK_PATH}/source/pru_io/firmware/pru_load_bin_copyright.h "+ core.toLocaleLowerCase() + "_load_bin.h > ${OPEN_PRU_PATH}/examples/empty/firmware/"+ board + "/" +core.toLocaleLowerCase() + "_load_bin.h ;"+ 
