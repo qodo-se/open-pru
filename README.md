@@ -175,12 +175,14 @@ Please consider creating a post on [TI's E2E forum](https://e2e.ti.com/).
 
 #### Step 1 : create .project folder inside new_example folder 
 
+
+
 This folder contains the following files:
 
 - project.js : Gets the component properties and component build properties from project_{device}.js file. There should only be one project.js file inside .project folder
 - project_{device.js} : Different custom build properties, compiler flags, linker flags etc. depending on the device can be specified in this file. These files can be created for different devices, for example, project_am64x.js , project_am243x.js, project_am261x.js, project_am263px.js, project_am263x.js etc.
 
-Note : project.js file can be used from empty example without any modifications and initial version of project_{device}.js can be copied from empty example and can be modified as per requirements, when new R5F project to be created use project_{device.js} from examples/empty/.project/project_{device.js} and when new PRU project to be created use project_{device.js} from examples/empty/firmware/.project/project_{device.js}
+Note : project.js file can be used from empty example without any modifications and initial version of project_{device}.js can be copied from empty example and can be modified as per requirements, when new R5F project to be created use project_{device.js} from examples/empty/.project/project_{device.js} and when new PRU project to be created use project_{device.js} from examples/empty/firmware/.project/project_{device.js}. When planning to create a project for both R5F and PRU, there should be two .project folders: one directly inside the new_example folder and another one level deeper inside the new_example/firmware folder. The firmware folder is meant to seperate the PRU project from the R5F project. 
 
 In general, the .project folder inside the new example should look similar to below image
 
@@ -193,10 +195,11 @@ This file uses 2 functions: getComponentProperty() and getComponentBuildProperty
 - Change the name of the project by modifying the value property.name .
 - Add a description for the project by modifying the value property.description . 
    - An example is given below
-          ```
-          property.name = "new_example";
-          property.description = "new example PRU Project"
-          ```
+      ```
+      property.name = "new_example";
+      property.description = "new example PRU Project"
+      ```
+- Change the path listed in the return statements of getmakefilePruPostBuildSteps(cpu, board) and getccsPruPostBuildSteps(cpu, board) from `${OPEN_PRU_PATH}/examples/empty/firmware/` to the path of the the new example (e.g. `${OPEN_PRU_PATH}/examples/new_example/firmware/`).
 - Provide the different build option combos, by modifying the value of property.buildOptionCombos. It takes in an array of JavaScript objects wherein one can specify the device, cpu, cgt, board and os. An example array of build option combos is given below.
    ```
    const buildOptionCombos = [
