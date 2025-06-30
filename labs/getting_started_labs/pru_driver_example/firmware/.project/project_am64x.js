@@ -2,7 +2,7 @@ let path = require('path');
 
 let device = "am64x";
 
-let project_name = "assembly_lab";
+let project_name = "pru_driver_example";
 
 const files = {
     common: [
@@ -14,7 +14,6 @@ const files = {
 /* Relative to where the makefile will be generated
  * Typically at <example_folder>/<BOARD>/<core_os_combo>/<compiler>
  */
-
 const filedirs = {
     common: [
         "..",       /* core_os_combo base */
@@ -76,8 +75,8 @@ function getmakefilePruPostBuildSteps(cpu, board)
             core = "PRU0"
     }
     return  [
-        "$(CG_TOOL_ROOT)/bin/hexpru --diag_wrap=off --array --array:name_prefix="+ core + "Firmware  -o "+ core.toLocaleLowerCase() + "_load_bin.h " + project_name + "_" + board + "_" + cpu + "_fw_ti-pru-cgt.out;"
-    ]; 
+        "$(CG_TOOL_ROOT)/bin/hexpru --diag_wrap=off --array --array:name_prefix="+ core + "Firmware  -o "+ core.toLocaleLowerCase() + "_load_bin.h " + project_name + "_" + board + "_" + cpu + "_fw_ti-pru-cgt.out;" 
+    ];
 }
 
 function getccsPruPostBuildSteps(cpu, board)
@@ -105,11 +104,7 @@ function getccsPruPostBuildSteps(cpu, board)
             core = "PRU0"
     }
     return  [
-        "$(CG_TOOL_ROOT)/bin/hexpru --diag_wrap=off --array --array:name_prefix="+ core + "Firmware  -o "+ core.toLocaleLowerCase() + "_load_bin.h " + project_name + "_" + board + "_" + cpu + "_fw_ti-pru-cgt.out;"+ 
-        "if ${CCS_HOST_OS} == linux cat ${MCU_PLUS_SDK_PATH}/source/pru_io/firmware/pru_load_bin_copyright.h "+ core.toLocaleLowerCase() + "_load_bin.h > ${OPEN_PRU_PATH}/labs/getting_started_labs/assembly_lab/firmware/"+ board + "/" +core.toLocaleLowerCase() + "_load_bin.h ;"+ 
-        "if ${CCS_HOST_OS} == linux rm "+ core.toLocaleLowerCase() + "_load_bin.h;"+
-        "if ${CCS_HOST_OS} == win32  $(CCS_INSTALL_DIR)/utils/cygwin/cat ${MCU_PLUS_SDK_PATH}/source/pru_io/firmware/pru_load_bin_copyright.h "+ core.toLocaleLowerCase() + "_load_bin.h > ${OPEN_PRU_PATH}/labs/getting_started_labs/assembly_lab/firmware/"+ board + "/" +core.toLocaleLowerCase() + "_load_bin.h ;"+ 
-        "if ${CCS_HOST_OS} == win32  $(CCS_INSTALL_DIR)/utils/cygwin/rm "+ core.toLocaleLowerCase() + "_load_bin.h;"
+        "$(CG_TOOL_ROOT)/bin/hexpru --diag_wrap=off --array --array:name_prefix="+ core + "Firmware  -o "+ core.toLocaleLowerCase() + "_load_bin.h " + project_name + "_" + board + "_" + cpu + "_fw_ti-pru-cgt.out;"
     ]; 
 }
 
@@ -130,7 +125,7 @@ function getComponentProperty() {
     property.makefile = "pru";
     property.name = project_name;
     property.isInternal = false;
-    property.description = "Getting Started Lab - Assembly"
+    property.description = "PRU Firmware to Be Loaded in by RTOS core"
     property.buildOptionCombos = buildOptionCombos;
     property.pru_main_file = "main";
     property.pru_linker_file = "linker";
