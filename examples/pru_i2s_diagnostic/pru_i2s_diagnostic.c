@@ -38,21 +38,24 @@
 #include "ti_board_open_close.h"
 #include "data.h"
 #include "pru_i2s/include/pru_i2s_drv.h"
+#include "ti_open_pru_config.h"
 #include <stdint.h>
+#ifdef SOC_AM263X
 #include "ioexp_tca6416.h"
+#endif
 #define TEST_PRUI2S0_IDX    ( 0 )   /* Test PRU I2S 0 index */
 #define TEST_PRUI2S1_IDX    ( 1 )   /* Test PRU I2S 1 index */
-
-#define TDM4 ( 1 ) /* TDM4 mode  (change to 0 for I2S)*/ 
-#ifdef TDM4
-/* FW image data */
+#if (CONFIG_I2S0_MODE==1)
+    /* FW image data */
 #include "pru_i2s/firmware/TDM4/pru_i2s_tdm4_pru0_array.h"  /* PRU0 */
 #include "pru_i2s/firmware/TDM4/pru_i2s_tdm4_pru1_array.h"  /* PRU1 */
+
 #else
 /* FW image data */
 #include "pru_i2s/firmware/I2S/pru_i2s_pru0_array.h"  /* PRU0 */
 #include "pru_i2s/firmware/I2S/pru_i2s_pru1_array.h"  /* PRU1 */
 #endif
+
 /* PRU I2S PRU image info */
 static PRUI2S_PruFwImageInfo gPruFwImageInfo[PRU_I2S_NUM_PRU_IMAGE] =
 {
@@ -135,7 +138,7 @@ uint32_t gLoopCnt;
  * In case of the main core, the print is redirected to the UART console.
  * For all other cores, CCS prints are used.
  */
-
+#ifdef SOC_AM263X
 static TCA6416_Config  gTCA6416_Config;
 
 /* Configure I2C IO Expander 
@@ -190,7 +193,9 @@ void i2s_i2c_io_expander(void)
     }
     
     TCA6416_close(&gTCA6416_Config);
+
 }
+#endif
 void pru_i2s_diagnostic_main(void *args)
 {
     uint8_t numValidCfg;
@@ -213,17 +218,19 @@ void pru_i2s_diagnostic_main(void *args)
     DebugP_log("Build timestamp      : %s %s\r\n", __DATE__, __TIME__);
 
     /* Debug, configure GPIO */
+    #ifdef SOC_AM263X
     GPIO_setDirMode(CONFIG_GPIO_DEBUG0_BASE_ADDR, CONFIG_GPIO_DEBUG0_PIN, CONFIG_GPIO_DEBUG0_DIR);
     GPIO_pinWriteHigh(CONFIG_GPIO_DEBUG0_BASE_ADDR, CONFIG_GPIO_DEBUG0_PIN);
     GPIO_pinWriteLow(CONFIG_GPIO_DEBUG0_BASE_ADDR, CONFIG_GPIO_DEBUG0_PIN);
     GPIO_setDirMode(CONFIG_GPIO_DEBUG1_BASE_ADDR, CONFIG_GPIO_DEBUG1_PIN, CONFIG_GPIO_DEBUG1_DIR);
     GPIO_pinWriteHigh(CONFIG_GPIO_DEBUG1_BASE_ADDR, CONFIG_GPIO_DEBUG1_PIN);
     GPIO_pinWriteLow(CONFIG_GPIO_DEBUG1_BASE_ADDR, CONFIG_GPIO_DEBUG1_PIN);
-
+    #endif
     /* Configure I2C IO Expander,
        route PRUn signals to HSEC */
+    #ifdef SOC_AM263X
     i2s_i2c_io_expander();
-
+    #endif
     /* Construct semaphores */
     status = SemaphoreP_constructBinary(&gPruI2s0TxSemObj, 0);
     if (status == SystemP_FAILURE)
@@ -471,8 +478,9 @@ void pruI2s0TxIrqHandler(void *args)
     /* debug, increment ISR count */
     gPruI2s0TxIsrCnt++;
     /* debug, drive GPIO high */
+    #ifdef SOC_AM263X
     GPIO_pinWriteHigh(CONFIG_GPIO_DEBUG0_BASE_ADDR, CONFIG_GPIO_DEBUG0_PIN);
-    
+    #endif
     handle = (PRUI2S_Handle)args;
     
     /* Clear PRU I2S interrupt */
@@ -485,7 +493,9 @@ void pruI2s0TxIrqHandler(void *args)
     SemaphoreP_post(&gPruI2s0TxSemObj);
 
     /* debug, drive GPIO low */
+    #ifdef SOC_AM263X
     GPIO_pinWriteLow(CONFIG_GPIO_DEBUG0_BASE_ADDR, CONFIG_GPIO_DEBUG0_PIN);
+    #endif
 }
 
 /* PRU I2S 0 Error IRQ handler */
@@ -539,8 +549,9 @@ void pruI2s1RxIrqHandler(void *args)
     /* debug, increment ISR count */
     gPruI2s1RxIsrCnt++;
     /* debug, drive GPIO high */
+    #ifdef SOC_AM263X
     GPIO_pinWriteHigh(CONFIG_GPIO_DEBUG1_BASE_ADDR, CONFIG_GPIO_DEBUG1_PIN);
-
+    #endif
     handle = (PRUI2S_Handle)args;
     
     /* Clear PRU I2S interrupt */
@@ -553,7 +564,9 @@ void pruI2s1RxIrqHandler(void *args)
     SemaphoreP_post(&gPruI2s1RxSemObj);
     
     /* debug, drive GPIO low */
+    #ifdef SOC_AM263X
     GPIO_pinWriteLow(CONFIG_GPIO_DEBUG1_BASE_ADDR, CONFIG_GPIO_DEBUG1_PIN);
+    #endif
 }
 
 /* PRU I2S 1 Error IRQ handler */

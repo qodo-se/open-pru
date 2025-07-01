@@ -1,5 +1,5 @@
 ; 
-; Copyright (C) 2021 Texas Instruments Incorporated - http://www.ti.com/
+; Copyright (C) 2025 Texas Instruments Incorporated - http://www.ti.com/
 ; 
 ; 
 ; Redistribution and use in source and binary forms, with or without
@@ -29,10 +29,6 @@
 ; THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 ; (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
-; this is intended to run on ICSSG0_PRU0/ICSSG0_PRU1
-
 	.sect	".text:main"
 	.clink
 	.global main
@@ -116,11 +112,6 @@ CONTIUNE_INIT:
 	;Move the LSb to the required position
 	LSL r30_value, r30_value, I2S_INSTANCE1_SD_TX_PIN_SHIFT
 	.endif
-
-
-	.if	$isdefed("I2S_PROFILE_FW")
-	;Removed the Profiling code as there are no enough cycles on AM263 to do this.
-	.endif
 	.if	!$isdefed("I2S_TX")
 	.if	$isdefed("I2S_RX")
 	;Read the PING/PONG SEL address
@@ -182,38 +173,25 @@ INITIAL_STATE:
 	; wait until the input BCLK is low
 	; then branch to wait for the rising edge
 	QBBS	INITIAL_STATE, r31, I2S_INSTANCE_BCLK_PIN
-
 	;Wait until there are 4 transitions of FS H-L-H-L-H
 INITIAL_STATE_FS:
 	; start iterating
 	; wait until the input FS is low
 	; then branch to wait for the rising edge
 	QBBS	INITIAL_STATE_FS, r31, I2S_INSTANCE_FS_PIN
-
 INITIAL_STATE_FS1:
 	; wait until the input FS is high
 	QBBC	INITIAL_STATE_FS1, r31, I2S_INSTANCE_FS_PIN
-
 INITIAL_STATE_FS2:
 	; wait until the input FS is low
 	QBBS	INITIAL_STATE_FS2, r31, I2S_INSTANCE_FS_PIN
 INITIAL_STATE_FS3:
 	; wait until the input FS is low
 	QBBC	INITIAL_STATE_FS3, r31, I2S_INSTANCE_FS_PIN
-
 BCLK_RISING_EDGE_LOW1:
 	QBBS	BCLK_RISING_EDGE_LOW1, r31, I2S_INSTANCE_BCLK_PIN
-;BCLK_RISING_EDGE_HIGH1:
-;	QBBC	BCLK_RISING_EDGE_HIGH1, r31, I2S_INSTANCE_BCLK_PIN
-	;LDI32	prux_cycle_cnt, 0
-	;SBCO	&prux_cycle_cnt, c11, 0xc, 4
-	;qba start1
 BCLK_RISING_EDGE_LOW:
 	; wait until we see a high value
-	;add r0,r0,1
-	;LDI32	prux_cycle_cnt, 0
-	;SBCO	&prux_cycle_cnt, c11, 0xc, 4
-;start1:
 	QBBC	BCLK_RISING_EDGE_LOW, r31, I2S_INSTANCE_BCLK_PIN
 
 	; Read FS.
@@ -268,50 +246,21 @@ CONTINUE_TX_PROCESSING:
 CHECK_FS_3:
 	LDI	fs_counter_1, 0x0
 	LSR	fs_level, fs_level, I2S_INSTANCE_FS_PIN
-	; if fs_value != FS input we have an error
-	;QBNE ERROR_HANDLING_FS, fs_level, fs_num
-
-	.if	$isdefed("I2S_PROFILE_FW")
-	;Path 5
-	;Removed the Profiling code as there are no enough cycles on AM263 to do this.
-	.endif
 	JMP	BCLK_FALLING_EDGE_HIGH
 
 CHECK_FS_1:
 	; if fs_counter = max(fs_counter) -1: Check for Early FS.
-	; compare FS input to expected FS value
-	; flip fs_value b/c we expect FS input to flip on the next cycle
-	; put new audio sample in channel_data (loaded during a different BCLK high cycle)
-	; if fs_value != FS input we have an error
-	; Move the FS level to LSb position
 	LSR	fs_level, fs_level, I2S_INSTANCE_FS_PIN
-	; Compare FS levels
-	;QBNE ERROR_HANDLING_FS, fs_level, fs_num
-
-	; pru_i2sle fs_num bit between 0 (L channel) and 1 (R channel)
-;;	XOR	fs_num, fs_num, 0x01
-
 	; increment fs_counter and wait for falling edge
 	ADD	fs_counter, fs_counter, 0x1
-	.if	$isdefed("I2S_PROFILE_FW")
-	;Path 2
-	;Removed the Profiling code as there are no enough cycles on AM263 to do this.
-	.endif
 	JMP	BCLK_FALLING_EDGE_HIGH
 
 CHECK_FS_2:
 	; if fs_counter = max(fs_counter):
-	; Increment a second counter. Compare will be done after fs_counter = max(fs_counter)+1
-	; reset fs_counter
-
 	;Increment counter.
 	ADD	fs_counter_1, fs_counter_1, 0x1
 	; reset fs_counter and wait for falling edge
 	LDI	fs_counter, 0x0
-	.if	$isdefed("I2S_PROFILE_FW")
-	;Path 3
-	;Removed the Profiling code as there are no enough cycles on AM263 to do this.
-	.endif
 	JMP	BCLK_FALLING_EDGE_HIGH
 
 LOAD_AUDIO_DATA:
@@ -359,10 +308,6 @@ RX_CONTINUE:
 	; notify the host
 	;LDI    R31.w0, TRIGGER_HOST_I2S_RX_IRQ
 	.endif ;I2S_RX
-
-	.if	$isdefed("I2S_PROFILE_FW")
-	;Removed the Profiling code as there are no enough cycles on AM263 to do this.
-	.endif
 	JMP	CONTINUE_TX_PROCESSING
 
 MANAGE_TX_BUFFERS:
@@ -374,10 +319,6 @@ MANAGE_TX_BUFFERS:
 	.endif
 	; increment fs_counter and wait for falling edge
 	ADD	fs_counter, fs_counter, 0x1
-	.if	$isdefed("I2S_PROFILE_FW")
-	;Path 1
-	;Removed the Profiling code as there are no enough cycles on AM263 to do this.
-	.endif
 	JMP	BCLK_FALLING_EDGE_HIGH
 
 START_NEW_BUFFER:
@@ -429,12 +370,6 @@ STORE_TX_PING_PONG_STAT:
 	.endif ;I2S_TX
 	; increment fs_counter and wait for falling edge
 	ADD	fs_counter, fs_counter, 0x1
-	.if	$isdefed("I2S_PROFILE_FW")
-	;Path 6
-	;Removed the Profiling code as there are no enough cycles on AM263 to do this.
-	;LDI32	cnt_buffer_address, 0x11200
-	;LDI32	cnt_buffer_address_1, 0x11610
-	.endif
 
 BCLK_FALLING_EDGE_HIGH:
 
@@ -442,11 +377,8 @@ BCLK_FALLING_EDGE_HIGH:
 	; write to R30 as soon as we see the falling clock edge
 	MOV	r30, r30_value
 	.endif
-ff:
-	QBBS	ff, r31, I2S_INSTANCE_BCLK_PIN
-
-	;LDI	prux_cycle_cnt.b0, 0
-	;SBCO	&prux_cycle_cnt.b0, c11, 0xc, 1
+WAIT_BCLK_REMAIN_HIGH:
+	QBBS	WAIT_BCLK_REMAIN_HIGH, r31, I2S_INSTANCE_BCLK_PIN
 	.if	$isdefed("I2S_TX")
 	.if	$isdefed("I2S_TX_DETECT_UNDERFLOW")
 	QBNE CONTINUE_TX_PROCESS, do_tx_underflow_error_check, 0x1
@@ -464,7 +396,6 @@ CONTINUE_TX_PROCESS:
 	LDI do_rx_overflow_error_check, 0
 	;Read the Rx Ping Pong buffer stat from register address space
 	LBBO 	&rx_ping_pong_stat, rx_ping_pong_stat_add, 0, 1
-
 	;If rx_buffer_num is 0, this means FW has already filled PING buffer.
 	QBNE RX_PONG_BUF, rx_buffer_num, 0x0
 	;Check if the PONG buffer is consumed by R5F. If consumed, bit 1 will be set to 0 by R5F, else it will be 1.
@@ -477,9 +408,7 @@ RX_PONG_BUF:
 	;Check if the PING buffer is consumed by R5F. If consumed, bit 0 will be set to 0 by R5F, else it will be 1.
 	QBBS ERROR_HANDLING_OVERFLOW, rx_ping_pong_stat, 0
 	;If 0, this means PING buffer is consumed by R5F. SET the PONG buffer status
-	;OR	rx_ping_pong_stat, rx_ping_pong_stat, 0x2
 	SET rx_ping_pong_stat, rx_ping_pong_stat, 1
-
 STORE_RX_PING_PONG_STAT:
 	SBBO 	&rx_ping_pong_stat, rx_ping_pong_stat_add, 0, 1
 	.endif ;I2S_RX_DETECT_OVERFLOW
@@ -487,14 +416,9 @@ STORE_RX_PING_PONG_STAT:
 	LDI    R31.w0, TRIGGER_HOST_I2S_RX_IRQ
 	.endif
 CONTINUE_RX_PROCESS:
-	.if	$isdefed("I2S_PROFILE_FW")
-	;Removed the Profiling code as there are no enough cycles on AM263 to do this.
-	.endif
 	.if	$isdefed("I2S_TX")
-
 	; if tx_sd_counter = 0, set to samples per channel 15/31
 	QBEQ	RESET_SD_COUNTER, tx_sd_counter, 0
-
 	; else, increment tx_sd_counter
 	SUB	tx_sd_counter, tx_sd_counter, 0x1
 	.endif
@@ -504,10 +428,6 @@ RESET_SD_COUNTER:
 	.if	$isdefed("I2S_TX")
 	; reset fs_counter and wait for falling edge
 	LDI	tx_sd_counter, I2S_SAMPLES_PER_CHANNEL_LESS_1
-	.if	$isdefed("SOC_AM64X")
-	AND ch0_data_tx, scratchreg0.w0, scratchreg0.w0
-	AND ch1_data_tx, scratchreg0.w2, scratchreg0.w2
-	.else
 	QBGE 	TX_DATA_LOADING, current_channel_no, TDM_CHANNELS
 	LDI32 	ch0_data_tx,0
 	QBA 	TX_DATA_LOADING_DONE
@@ -520,7 +440,6 @@ TX_DATA_LOADING_DONE:
 NO_CH_RESET:
 	ADD current_channel_no, current_channel_no, 1
 CH_UPDATE_DONE:
-	.endif
 	.endif
 
 PREPARE_INPUT:

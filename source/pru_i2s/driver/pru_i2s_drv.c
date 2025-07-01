@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Texas Instruments Incorporated
+ * Copyright (C) 2025 Texas Instruments Incorporated
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -1349,6 +1349,7 @@ static int32_t PRUI2S_checkSwipParams(
        Check Host interrupt numbers.
        Note R5F interrupt ranges for ICSS host interrupts are all the same. 
      */
+#ifdef SOC_AM263X
     if ((status == SystemP_SUCCESS) &&
         (icssHwInstId == PRUICSS_INSTANCE_ONE) &&
         ((pSwipAttrs->i2sTxHostIntNum < CSLR_R5FSS0_CORE0_INTR_PRU_ICSSM0_PR1_HOST_INTR_PEND_0)   ||
@@ -1357,6 +1358,18 @@ static int32_t PRUI2S_checkSwipParams(
         (pSwipAttrs->i2sRxHostIntNum > CSLR_R5FSS0_CORE0_INTR_PRU_ICSSM0_PR1_HOST_INTR_PEND_7)    ||
         (pSwipAttrs->i2sErrHostIntNum < CSLR_R5FSS0_CORE0_INTR_PRU_ICSSM0_PR1_HOST_INTR_PEND_0) ||
         (pSwipAttrs->i2sErrHostIntNum > CSLR_R5FSS0_CORE0_INTR_PRU_ICSSM0_PR1_HOST_INTR_PEND_7)))
+#elif defined(SOC_AM261X)
+if ((status == SystemP_SUCCESS) &&
+        (icssHwInstId == PRUICSS_INSTANCE_TWO) &&
+        ((pSwipAttrs->i2sTxHostIntNum < CSLR_R5FSS0_CORE0_INTR_PRU_ICSSM1_PR1_HOST_INTR_PEND_0)   ||
+        (pSwipAttrs->i2sTxHostIntNum > CSLR_R5FSS0_CORE0_INTR_PRU_ICSSM1_PR1_HOST_INTR_PEND_7)    ||
+        (pSwipAttrs->i2sRxHostIntNum < CSLR_R5FSS0_CORE0_INTR_PRU_ICSSM1_PR1_HOST_INTR_PEND_0)    ||
+        (pSwipAttrs->i2sRxHostIntNum > CSLR_R5FSS0_CORE0_INTR_PRU_ICSSM1_PR1_HOST_INTR_PEND_7)    ||
+        (pSwipAttrs->i2sErrHostIntNum < CSLR_R5FSS0_CORE0_INTR_PRU_ICSSM1_PR1_HOST_INTR_PEND_0) ||
+        (pSwipAttrs->i2sErrHostIntNum > CSLR_R5FSS0_CORE0_INTR_PRU_ICSSM1_PR1_HOST_INTR_PEND_7)))
+#else
+#error "Unsupported SoC"
+#endif
     {
             status = SystemP_FAILURE;       
     }
@@ -1445,7 +1458,13 @@ static int32_t PRUI2S_checkOpenParams(
         /* Check Tx ping/pong buffer base address.
            Tx ping/pong buffer is expected to be in ICSS SHMEM. */
         if ((status == SystemP_SUCCESS) && 
-            (icssHwInstId == PRUICSS_INSTANCE_ONE) && 
+#ifdef SOC_AM263X 
+        (icssHwInstId == PRUICSS_INSTANCE_ONE) && 
+#elif defined SOC_AM261X
+        (icssHwInstId == PRUICSS_INSTANCE_TWO) && 
+#else 
+    (0) && //"Unsupported SoC"
+#endif        
             ((pPrms->txPingPongBaseAddr < CSL_ICSS_M_RAM_SLV_RAM_REGS_BASE) ||
              (pPrms->txPingPongBaseAddr >= (CSL_ICSS_M_RAM_SLV_RAM_REGS_BASE + sizeof(CSL_icss_m_ram_slv_ramRegs)))))
         {
@@ -1843,12 +1862,22 @@ static int32_t PRUI2S_initFw(
         /* Check if Rx PP buffer is located in ICSSM SHMEM. 
            If so, adjust address to be local to ICSSM. */
         tmpRxPpBufAddr = pObj->prms.rxPingPongBaseAddr;
+#ifdef SOC_AM263X
         if ((pObj->prms.rxPingPongBaseAddr >= (CSL_ICSSM0_INTERNAL_U_BASE + CSL_ICSS_M_RAM_SLV_RAM_REGS_BASE)) &&
             (pObj->prms.rxPingPongBaseAddr < (CSL_ICSSM0_INTERNAL_U_BASE + CSL_ICSS_M_RAM_SLV_RAM_REGS_BASE + sizeof(CSL_icss_m_ram_slv_ramRegs))))
         {
             tmpRxPpBufAddr -= CSL_ICSSM0_INTERNAL_U_BASE;
         }
-        
+#elif defined SOC_AM261X   
+     if ((pObj->prms.rxPingPongBaseAddr >= (CSL_ICSSM1_INTERNAL + CSL_ICSS_M_RAM_SLV_RAM_REGS_BASE)) &&
+            (pObj->prms.rxPingPongBaseAddr < (CSL_ICSSM1_INTERNAL + CSL_ICSS_M_RAM_SLV_RAM_REGS_BASE + sizeof(CSL_icss_m_ram_slv_ramRegs))))
+        {
+            tmpRxPpBufAddr -= CSL_ICSSM1_INTERNAL;
+        }
+#else
+#error "Unsupported SoC"
+#endif
+
         /* Write Rx ping/pong buffer address */
         HW_WR_REG32(pSwipAttrs->baseAddr + FW_REG_RX_PING_PONG_BUF_ADDR, tmpRxPpBufAddr);
     }
@@ -1880,10 +1909,20 @@ static int32_t PRUI2S_initPpBufs(
         pPruIcssHwAttrs = PRUICSS_getAttrs(pSwipAttrs->icssInstId);
         if (pPruIcssHwAttrs != NULL)
         {
-            /* Initialize Object SoC Tx ping/pong address */
+            
+#ifdef SOC_AM263X
+/* Initialize Object SoC Tx ping/pong address */
             if (pPruIcssHwAttrs->instance == PRUICSS_INSTANCE_ONE)
             {
                 pObj->txPingPongBuf = (void *)(CSL_ICSSM0_INTERNAL_U_BASE + CSL_ICSS_M_DRAM0_SLV_RAM_REGS_BASE + pObj->prms.txPingPongBaseAddr);
+#elif defined SOC_AM261X
+/* Initialize Object SoC Tx ping/pong address */
+            if (pPruIcssHwAttrs->instance == PRUICSS_INSTANCE_TWO)
+            {
+                pObj->txPingPongBuf = (void *)(CSL_ICSSM1_INTERNAL + CSL_ICSS_M_DRAM0_SLV_RAM_REGS_BASE + pObj->prms.txPingPongBaseAddr);
+#else
+#error "Unsupported SoC"
+#endif
             }
             else
             {
@@ -1963,13 +2002,13 @@ static int32_t PRUI2S_initPruGpioOutCtrlReg(
     PRUI2S_Config *pCfg
 )
 {
+    int32_t status = SystemP_SUCCESS;
+#ifdef SOC_AM263X
+    /* AM263x specific GPIO output control configuration */
     PRUI2S_SwipAttrs *pSwipAttrs;
     volatile uint32_t *pPruGpioOutCtrlReg;
     uint32_t regVal;
-    uint32_t mask;
-    uint8_t i;
-    int32_t status = SystemP_SUCCESS;
-
+    
     /* Get pointers */
     pSwipAttrs = pCfg->attrs;
     
@@ -1989,6 +2028,8 @@ static int32_t PRUI2S_initPruGpioOutCtrlReg(
     
     if (status == SystemP_SUCCESS)
     {
+        uint32_t mask;
+        uint8_t i;
         
         regVal = HW_RD_REG32(pPruGpioOutCtrlReg);
         
@@ -2012,7 +2053,18 @@ static int32_t PRUI2S_initPruGpioOutCtrlReg(
 
         HW_WR_REG32(pPruGpioOutCtrlReg, regVal);
     }
-    
+
+#elif defined(SOC_AM261X)
+    /* 
+     * AM261x doesn't need GPIO output control configuration 
+     * when not using GPIOs 17, 18, 19
+     * Direction control is handled by PRU firmware
+     */
+    status = SystemP_SUCCESS;
+
+#else
+    #error "Unsupported SOC defined"
+#endif
     return status;
 }
 
@@ -2074,6 +2126,7 @@ static int32_t PRUI2S_deinitPru(
 /* Unlock pinmux -- copied from pinmux.c */
 static void Pinmux_lockMMR(uint32_t domainId)
 {
+#if defined(SOC_AM263X)
     uint32_t            baseAddr;
     volatile uint32_t  *kickAddr;
 
@@ -2083,13 +2136,14 @@ static void Pinmux_lockMMR(uint32_t domainId)
     CSL_REG32_WR(kickAddr, IOMUX_KICK_LOCK_VAL);      /* KICK 0 */
     kickAddr = (volatile uint32_t *) (baseAddr + CSL_IOMUX_IO_CFG_KICK1);
     CSL_REG32_WR(kickAddr, IOMUX_KICK_LOCK_VAL);      /* KICK 1 */
-
+#endif
     return;
 }
 
 /* Lock pinmux -- copied from pinmux.c */
 static void Pinmux_unlockMMR(uint32_t domainId)
 {
+#if defined(SOC_AM263X)
     uint32_t            baseAddr;
     volatile uint32_t  *kickAddr;
 
@@ -2099,7 +2153,7 @@ static void Pinmux_unlockMMR(uint32_t domainId)
     CSL_REG32_WR(kickAddr, IOMUX_KICK0_UNLOCK_VAL);      /* KICK 0 */
     kickAddr = (volatile uint32_t *) (baseAddr + CSL_IOMUX_IO_CFG_KICK1);
     CSL_REG32_WR(kickAddr, IOMUX_KICK1_UNLOCK_VAL);      /* KICK 1 */
-
+#endif
     return;
 }
 

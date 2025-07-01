@@ -1,5 +1,5 @@
 ; 
-; Copyright (C) 2021 Texas Instruments Incorporated - http://www.ti.com/
+; Copyright (C) 2025 Texas Instruments Incorporated - http://www.ti.com/
 ; 
 ; 
 ; Redistribution and use in source and binary forms, with or without
@@ -101,10 +101,6 @@ CONTIUNE_INIT:
 	LDI	rx_buffer_num, 0x1
 	LDI	tx_sd_counter, I2S_SAMPLES_PER_CHANNEL_LESS_1
 
-	.if	$isdefed("I2S_PROFILE_FW")
-	;Removed the Profiling code as there are no enough cycles on AM263 to do this.
-	.endif
-
 	.if	!$isdefed("I2S_TX")
 	.if	$isdefed("I2S_RX")
 	;Read the PING/PONG SEL address
@@ -157,17 +153,9 @@ CONTIUNE_INIT:
 	.endif
 
 	.if	$isdefed("I2S_TX")
-	.if $isdefed("SOC_AM64X")
-	;Read the first 4 bytes from Ping buffer
-	LBBO	&scratchreg0, tx_buffer_address, 0, 4
-	ADD	tx_buffer_address, tx_buffer_address, 0x4
-	AND ch0_data_tx, scratchreg0.w0, scratchreg0.w0
-	AND ch1_data_tx, scratchreg0.w2, scratchreg0.w2
-	.else
 	;Read the first 8/12 bytes from Ping buffer
 	LBBO	&ch0_data_tx, tx_buffer_address, 0, BYTES_TO_LOAD
 	ADD		tx_buffer_address, tx_buffer_address, BYTES_TO_LOAD
-	.endif
 	.endif
 
 INITIAL_STATE:
@@ -197,10 +185,6 @@ BCLK_RISING_EDGE_HIGH1:
 BCLK_RISING_EDGE_LOW:
 	; wait until we see a high value
 	QBBC	BCLK_RISING_EDGE_LOW, r31, I2S_INSTANCE_BCLK_PIN
-	.if	$isdefed("I2S_PROFILE_FW")
-	;Removed the Profiling code as there are no enough cycles on AM263 to do this.
-	.endif
-
 	; Read FS.
 	AND fs_level, r31, i2s_instance_fs_pin_pos
 	.if	$isdefed("I2S_RX")
@@ -219,21 +203,12 @@ CONTINUE_TX_PROCESSING:
 	.endif
 	; if fs_counter = 0x0, then do tx buffer management
 	QBEQ	MANAGE_TX_BUFFERS, fs_counter, 0x0
-	.if $isdefed("SOC_AM64X")
 	;if fs_counter = max(fs_counter) -1, then check FS before expected FS transition
-	QBEQ	CHECK_FS_1, fs_counter, 0xE
+	QBEQ	CHECK_FS_1, fs_counter, I2S_SAMPLES_PER_CHANNEL-2
 	;if fs_counter = max(fs_counter), then check FS after expected FS transition
-	QBEQ	CHECK_FS_2, fs_counter, 0xF
+	QBEQ	CHECK_FS_2, fs_counter, I2S_SAMPLES_PER_CHANNEL-1
 	;if fs_counter = max(fs_counter) -2, then load audio data
-	QBEQ	LOAD_AUDIO_DATA, fs_counter, 0xD
-	.else
-	;if fs_counter = max(fs_counter) -1, then check FS before expected FS transition
-	QBEQ	CHECK_FS_1, fs_counter, 0x1E
-	;if fs_counter = max(fs_counter), then check FS after expected FS transition
-	QBEQ	CHECK_FS_2, fs_counter, 0x1F
-	;if fs_counter = max(fs_counter) -2, then load audio data
-	QBEQ	LOAD_AUDIO_DATA, fs_counter, 0x1D
-	.endif
+	QBEQ	LOAD_AUDIO_DATA, fs_counter, I2S_SAMPLES_PER_CHANNEL-3
 	;In case of Rx Only, Jump here after Sending Rx Notify to save PRU Cycles as we know fs_counter is 1.
 	.if	!$isdefed("I2S_TX")
 	.if	$isdefed("I2S_RX")
@@ -255,11 +230,6 @@ CHECK_FS_3:
 	LSR	fs_level, fs_level, I2S_INSTANCE_FS_PIN
 	; if fs_value != FS input we have an error
 	QBNE ERROR_HANDLING_FS, fs_level, fs_num
-
-	.if	$isdefed("I2S_PROFILE_FW")
-	;Path 5
-	;Removed the Profiling code as there are no enough cycles on AM263 to do this.
-	.endif
 	JMP	BCLK_FALLING_EDGE_HIGH
 
 CHECK_FS_1:
@@ -278,10 +248,6 @@ CHECK_FS_1:
 
 	; increment fs_counter and wait for falling edge
 	ADD	fs_counter, fs_counter, 0x1
-	.if	$isdefed("I2S_PROFILE_FW")
-	;Path 2
-	;Removed the Profiling code as there are no enough cycles on AM263 to do this.
-	.endif
 	JMP	BCLK_FALLING_EDGE_HIGH
 
 CHECK_FS_2:
@@ -294,33 +260,17 @@ CHECK_FS_2:
 
 	; reset fs_counter and wait for falling edge
 	LDI	fs_counter, 0x0
-	.if	$isdefed("I2S_PROFILE_FW")
-	;Path 3
-	;Removed the Profiling code as there are no enough cycles on AM263 to do this.
-	.endif
 	JMP	BCLK_FALLING_EDGE_HIGH
 
 LOAD_AUDIO_DATA:
 	.if	$isdefed("I2S_TX")
-	.if	$isdefed("SOC_AM64X")
-	; load audio data from ping-pong buffers
-	; note that scratch registers must be sequential
-	LBBO	&scratchreg0, tx_buffer_address, 0, 4
-	ADD	tx_buffer_address, tx_buffer_address, 0x4
-	.else
 	; load audio data from ping-pong buffers
 	; note that scratch registers must be sequential
 	LBBO	&scratchreg0, tx_buffer_address, 0, BYTES_TO_LOAD
 	ADD	tx_buffer_address, tx_buffer_address, BYTES_TO_LOAD
 	.endif
-	.endif
 	; increment fs_counter and wait for falling edge
 	ADD	fs_counter, fs_counter, 0x1
-
-	.if	$isdefed("I2S_PROFILE_FW")
-	;Path 4
-	;Removed the Profiling code as there are no enough cycles on AM263 to do this.
-	.endif
 	JMP	BCLK_FALLING_EDGE_HIGH
 
 MANAGE_RX_BUFFERS:
@@ -348,11 +298,6 @@ RX_CONTINUE:
 	; notify the host
 	;LDI    R31.w0, TRIGGER_HOST_I2S_RX_IRQ
 	.endif ;I2S_RX
-
-	.if	$isdefed("I2S_PROFILE_FW")
-	;Removed the Profiling code as there are no enough cycles on AM263 to do this.
-	.endif
-
 	JMP	CONTINUE_TX_PROCESSING
 
 MANAGE_TX_BUFFERS:
@@ -364,10 +309,6 @@ MANAGE_TX_BUFFERS:
 	.endif
 	; increment fs_counter and wait for falling edge
 	ADD	fs_counter, fs_counter, 0x1
-	.if	$isdefed("I2S_PROFILE_FW")
-	;Path 1
-	;Removed the Profiling code as there are no enough cycles on AM263 to do this.
-	.endif
 	JMP	BCLK_FALLING_EDGE_HIGH
 
 START_NEW_BUFFER:
@@ -419,13 +360,6 @@ STORE_TX_PING_PONG_STAT:
 	.endif ;I2S_TX
 	; increment fs_counter and wait for falling edge
 	ADD	fs_counter, fs_counter, 0x1
-	.if	$isdefed("I2S_PROFILE_FW")
-	;Path 6
-	;Removed the Profiling code as there are no enough cycles on AM263 to do this.
-	;LDI32	cnt_buffer_address, 0x11200
-	;LDI32	cnt_buffer_address_1, 0x11610
-	.endif
-
 BCLK_FALLING_EDGE_HIGH:
 	QBBS	BCLK_FALLING_EDGE_HIGH, r31, I2S_INSTANCE_BCLK_PIN
 	.if	$isdefed("I2S_TX")
@@ -469,10 +403,6 @@ STORE_RX_PING_PONG_STAT:
 	LDI    R31.w0, TRIGGER_HOST_I2S_RX_IRQ
 	.endif
 CONTINUE_RX_PROCESS:
-	.if	$isdefed("I2S_PROFILE_FW")
-	;Removed the Profiling code as there are no enough cycles on AM263 to do this.
-	.endif
-
 	.if	$isdefed("I2S_TX")
 	; these 3 pseudoinstructions are used for each additional output bit
 	; move the bit of audio data we are going to output next to the LSb of r30_value
@@ -514,15 +444,10 @@ RESET_SD_COUNTER:
 	.if	$isdefed("I2S_TX")
 	; reset fs_counter and wait for falling edge
 	LDI	tx_sd_counter, I2S_SAMPLES_PER_CHANNEL_LESS_1
-	.if	$isdefed("SOC_AM64X")
-	AND ch0_data_tx, scratchreg0.w0, scratchreg0.w0
-	AND ch1_data_tx, scratchreg0.w2, scratchreg0.w2
-	.else
 	MOV ch0_data_tx, scratchreg0
 	MOV ch1_data_tx, scratchreg1
 	.if	$isdefed("NUMBER_OF_TX_3")
 	MOV ch2_data_tx, scratchreg2
-	.endif
 	.endif
 	.endif
 
@@ -547,33 +472,16 @@ PREPARE_INPUT:
 SKIP:
 	SUB rx_sd_counter, rx_sd_counter, 1
 	.endif
-
-	.if	$isdefed("I2S_PROFILE_FW")
-	;Path 1
-	;Removed the Profiling code as there are no enough cycles on AM263 to do this.
-	.endif
 	JMP	BCLK_RISING_EDGE_LOW
 
 STORE_AUDIO_DATA:
 	.if	$isdefed("I2S_RX")
-	.if	$isdefed("SOC_AM64X")
-	; store 16 bits of audio data
-	SBBO	&ch0_data_rx, rx_buffer_address, 0, 2
-	ADD	rx_buffer_address, rx_buffer_address, 0x2
-	SBBO	&ch1_data_rx, rx_buffer_address, 0, 2
-	ADD	rx_buffer_address, rx_buffer_address, 0x2
-	.else
 	; store 32 bits of audio data per channel.
 	SBBO	&ch0_data_rx, rx_buffer_address, 0, 8
 	ADD	rx_buffer_address, rx_buffer_address, 0x8
-	.endif
 	; Reset ch0_rx_val_reg, ch1_rx_val_reg, ch0_data_rx, ch1_data_rx to 0. All these register must be continuous
 	ZERO 	&ch0_rx_val_reg, 16
 	LDI	rx_sd_counter, I2S_SAMPLES_PER_CHANNEL_LESS_1
-	.endif
-	.if	$isdefed("I2S_PROFILE_FW")
-	;Path 2
-	;Removed the Profiling code as there are no enough cycles on AM263 to do this.
 	.endif
 	JMP	BCLK_RISING_EDGE_LOW
 

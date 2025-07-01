@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Texas Instruments Incorporated
+ * Copyright (C) 2025 Texas Instruments Incorporated
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -35,8 +35,8 @@
 
 #include <stdint.h>
 #include <drivers/hw_include/cslr.h>
-#include <drivers\hw_include\am263x\cslr_iomux.h>
-#include <drivers\hw_include\am263x\cslr_mss_ctrl.h>
+//#include <drivers\hw_include\am263x\cslr_iomux.h>
+//#include <drivers\hw_include\am263x\cslr_mss_ctrl.h>
 #include <string.h>
 #include <drivers/hw_include/tistdtypes.h>
 #include <drivers/hw_include/hw_types.h>
@@ -48,14 +48,13 @@
 #include <kernel/dpl/AddrTranslateP.h>
 #include <kernel/dpl/HwiP.h>
 #include <kernel/dpl/SemaphoreP.h>
-#include <drivers\hw_include\am263px\cslr_intr_r5fss0_core0.h>
-#include <drivers\pinmux\am263x\pinmux.h>
+//#include <drivers\hw_include\am263px\cslr_intr_r5fss0_core0.h>
+//#include <drivers\pinmux\am263x\pinmux.h>
 //#include "ti_drivers_config.h"
 #include "pru_i2s_drv.h"
 #include "pru_i2s_pruss_intc_mapping.h"  /* INTC configuration */
-#include <drivers\hw_include\am263px\cslr_soc_baseaddress.h>
+//#include <drivers\hw_include\am263px\cslr_soc_baseaddress.h>
 #include <pru_i2s/firmware/TDM4/icss_pru_i2s_fw.h>
-
 
 #include <stdint.h>
 #include <drivers/hw_include/tistdtypes.h>
@@ -292,7 +291,71 @@ static PRUI2S_Object gPruI2sObject[PRU_I2S_MAX_NUM_INST];
 /* PRU I2S SW IP attributes */
 static PRUI2S_SwipAttrs gPruI2sSwipAttrs[PRU_I2S_MAX_NUM_INST] =
 {
+#ifdef SOC_AM261X
+{
+    /* baseAddr */
+    (uint32_t)CSL_ICSSM1_INTERNAL + (uint32_t)CSL_ICSS_M_DRAM0_SLV_RAM_REGS_BASE + (uint32_t)ICSS_PRUI2S_FW_REG_BASE,
+    0,                                                                   /* icssInstId */
+    PRUICSS_PRU0,                                                                       /* pruInstId */
+    0,                                                                                  /* numTxI2s - 1 TX */
+    0,                                                                                  /* numRxI2s - No RX */
+    0,                                                                                  /* sampFreq */
+    0,                                                                                  /* bitsPerSlot */
+    CSLR_R5FSS0_CORE0_INTR_PRU_ICSSM1_PR1_HOST_INTR_PEND_0,                             /* i2sTxHostIntNum */
+    CSLR_R5FSS0_CORE0_INTR_PRU_ICSSM1_PR1_HOST_INTR_PEND_1,                             /* i2sRxHostIntNum */
+    CSLR_R5FSS0_CORE0_INTR_PRU_ICSSM1_PR1_HOST_INTR_PEND_2,                             /* i2sErrHostIntNum */
+    0,                                                                                  /* i2sTxIcssIntcSysEvt */
+    0,                                                                                  /* i2sRxIcssIntcSysEvt */
+    0,                                                                                  /* i2sErrIcssIntcSysEvt */
+    /* bclkPin */
+    {6, 0x531000AC, 0x00000500},  // GPIO43
+    /* fsyncPin */
+    {1, 0x531000B4, 0x00000500},  // GPIO45
+    /* Tx pins */
     {
+        {2, 0x53100068, 0x00000000},  // GPIO26 for TX
+        {0, 0, 0},                     // Not used
+        {0, 0, 0}                      // Not used
+    },
+    /* Rx pins - Not used for core 0 */
+    {
+        {0, 0, 0},
+        {0, 0, 0}
+    }
+},
+{
+    /* baseAddr */
+    (uint32_t)CSL_ICSSM1_INTERNAL + (uint32_t)CSL_ICSS_M_DRAM1_SLV_RAM_REGS_BASE + (uint32_t)ICSS_PRUI2S_FW_REG_BASE,
+    0,                                                                   /* icssInstId */
+    PRUICSS_PRU1,                                                                       /* pruInstId */
+    0,                                                                                  /* numTxI2s - No TX */
+    0,                                                                                  /* numRxI2s - 1 RX */
+    0,                                                                                  /* sampFreq */
+    0,                                                                                  /* bitsPerSlot */
+    CSLR_R5FSS0_CORE0_INTR_PRU_ICSSM1_PR1_HOST_INTR_PEND_3,                             /* i2sTxHostIntNum */
+    CSLR_R5FSS0_CORE0_INTR_PRU_ICSSM1_PR1_HOST_INTR_PEND_4,                             /* i2sRxHostIntNum */
+    CSLR_R5FSS0_CORE0_INTR_PRU_ICSSM1_PR1_HOST_INTR_PEND_5,                             /* i2sErrHostIntNum */
+    0,                                                                                  /* i2sTxIcssIntcSysEvt */
+    0,                                                                                  /* i2sRxIcssIntcSysEvt */
+    0,                                                                                  /* i2sErrIcssIntcSysEvt */
+    /* bclkPin */
+    {0, 0x531000D8, 0x00000500},  // GPIO54
+    /* fsyncPin */
+    {1, 0x53100128, 0x00000500},  // GPIO74
+    /* Tx pins - Not used for core 1 */
+    {
+        {0, 0, 0},
+        {0, 0, 0},
+        {0, 0, 0}
+    },
+    /* Rx pins */
+    {
+        {4, 0x53100010, 0x00000500},  // GPIO4 for RX
+        {0, 0, 0}                      // Not used
+    }
+}
+#else
+  {
         /* baseAddr */
         (uint32_t)CSL_ICSSM0_INTERNAL_U_BASE + (uint32_t)CSL_ICSS_M_DRAM0_SLV_RAM_REGS_BASE + (uint32_t)ICSS_PRUI2S_FW_REG_BASE,
         CONFIG_PRU_ICSS0,                                                                   /* icssInstId */
@@ -354,6 +417,7 @@ static PRUI2S_SwipAttrs gPruI2sSwipAttrs[PRU_I2S_MAX_NUM_INST] =
             {3, 0x531001C0, 0x00000500}
         }
     }
+#endif
 };
 
 /* PRU I2S configurations */

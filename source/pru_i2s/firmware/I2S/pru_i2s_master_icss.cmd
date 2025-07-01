@@ -1,6 +1,6 @@
 /****************************************************************************/
 /*  ICSSG_PRU.cmd                                                           */
-/*  Copyright (c) 2021  Texas Instruments Incorporated                      */
+/*  Copyright (c) 2025  Texas Instruments Incorporated                      */
 /*                                                                          */
 /*    Description: This file is a linker command file that can be used for  */
 /*                 linking PRU programs built with the C compiler and       */

@@ -1,5 +1,5 @@
 ;
-; Copyright (C) 2021 Texas Instruments Incorporated
+; Copyright (C) 2025 Texas Instruments Incorporated
 ;
 ; Redistribution and use in source and binary forms, with or without
 ; modification, are permitted provided that the following conditions
@@ -30,7 +30,7 @@
 ; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ;
 
-
+    .if $isdefed("SOC_AM263X")
     .if $isdefed("PRU0")
 I2S_INSTANCE_BCLK_PIN           .set    6   ; PRG0_PRU0_GPOx
 I2S_INSTANCE_BCLK_PIN_POS       .set    64  ; 2 << I2S_INSTANCE_BCLK_PIN
@@ -92,7 +92,52 @@ I2S_INSTANCE2_SD_RX_PIN_SHIFT   .set    I2S_INSTANCE2_SD_RX_PIN
 I2S_INSTANCE2_SD_RX_PIN_POS     .set    8   ; 2 << I2S_INSTANCE2_SD_Rx_PIN
     .endif
     .endif
-   
+    .endif  ;SOC_AM263X
+    .if $isdefed("SOC_AM261X")
+    .if $isdefed("PRU0")
+; PRU0 Configuration
+I2S_INSTANCE_BCLK_PIN           .set    5   ; PRU0 BCLK pin
+I2S_INSTANCE_BCLK_PIN_POS       .set    32  ; 2 << 5
+
+I2S_INSTANCE_FS_PIN             .set    6   ; PRU0 FSYNC pin
+I2S_INSTANCE_FS_PIN_POS         .set    64  ; 2 << 6
+
+    .if $isdefed("I2S_TX")
+; PRU0 TX pins
+I2S_INSTANCE1_SD_TX_PIN         .set    7   ; TX1
+I2S_INSTANCE1_SD_TX_PIN_SHIFT   .set    I2S_INSTANCE1_SD_TX_PIN
+I2S_INSTANCE1_SD_TX_PIN_POS     .set    128 ; 2 << 7
+
+I2S_INSTANCE2_SD_TX_PIN         .set    8   ; TX2
+I2S_INSTANCE2_SD_TX_PIN_SHIFT   .set    I2S_INSTANCE2_SD_TX_PIN
+I2S_INSTANCE2_SD_TX_PIN_POS     .set    256 ; 2 << 8
+
+I2S_INSTANCE3_SD_TX_PIN         .set    9   ; TX3
+I2S_INSTANCE3_SD_TX_PIN_SHIFT   .set    I2S_INSTANCE3_SD_TX_PIN
+I2S_INSTANCE3_SD_TX_PIN_POS     .set    512 ; 2 << 9
+    .endif
+
+    .else
+; PRU1 Configuration
+I2S_INSTANCE_BCLK_PIN           .set    5   ; PRU1 BCLK pin
+I2S_INSTANCE_BCLK_PIN_POS       .set    32  ; 2 << 5
+
+I2S_INSTANCE_FS_PIN             .set    9   ; PRU1 FSYNC pin
+I2S_INSTANCE_FS_PIN_POS         .set    512 ; 2 << 9
+
+    .if $isdefed("I2S_RX")
+; PRU1 RX pins
+I2S_INSTANCE1_SD_RX_PIN         .set    12  ; RX1
+I2S_INSTANCE1_SD_RX_PIN_SHIFT   .set    I2S_INSTANCE1_SD_RX_PIN
+I2S_INSTANCE1_SD_RX_PIN_POS     .set    4096 ; 2 << 12
+
+I2S_INSTANCE2_SD_RX_PIN         .set    13  ; RX2
+I2S_INSTANCE2_SD_RX_PIN_SHIFT   .set    I2S_INSTANCE2_SD_RX_PIN
+I2S_INSTANCE2_SD_RX_PIN_POS     .set    8192 ; 2 << 13
+    .endif
+    .endif
+
+    .endif ;SOC_AM261X
 I2S_RXOVERFLOW_ERROR_POSITION   .set    0
 I2S_TXUNDERFLOW_ERROR_POSITION  .set    1
 I2S_FRAMESYNC_ERROR_POSITION    .set    2
@@ -130,19 +175,10 @@ PRUx_CYCLE_CNT_REG_ADD          .set    0x2200C; PRU0 cycle counter register add
     .else
 PRUx_CYCLE_CNT_REG_ADD          .set    0x2400C; PRU1 cycle counter register address offset
     .endif
-
-    .if $isdefed("SOC_AM64X")
-;Number of samples per slot/channel
-I2S_SAMPLES_PER_CHANNEL         .set    16
-I2S_SAMPLES_PER_CHANNEL_LESS_1  .set    15 ;I2S_SAMPLES_PER_CHANNEL-1
-    .else
 ;Number of samples per slot/channel
 I2S_SAMPLES_PER_CHANNEL         .set    32
 I2S_SAMPLES_PER_CHANNEL_LESS_1  .set    31 ;I2S_SAMPLES_PER_CHANNEL-1
-    .endif
-
-
-                                .if $isdefed("PRU0")
+    .if $isdefed("PRU0")
 ; Compile-time Host event for I2S Tx, pr0_pru_mst_intr[2]_intr_req
 TRIGGER_HOST_I2S_TX_EVT         .set 18 ; 2+16
 ; R31 event interface mapping, add pru<n>_r31_vec_valid to system event number
@@ -158,7 +194,7 @@ TRIGGER_HOST_I2S_ERR_EVT        .set 20 ; 4+16
 ; R31 event interface mapping, add pru<n>_r31_vec_valid to system event number
 TRIGGER_HOST_I2S_ERR_IRQ        .set TRIGGER_HOST_I2S_ERR_EVT + 16 ; 4+16+16 = 4+32 = 4 + 1<<5
 
-                                .else
+    .else
 ; Compile-time Host event for I2S Tx, pr0_pru_mst_intr[2]_intr_req
 TRIGGER_HOST_I2S_TX_EVT         .set 21 ; 5+16
 ; R31 event interface mapping, add pru<n>_r31_vec_valid to system event number
@@ -174,4 +210,4 @@ TRIGGER_HOST_I2S_ERR_EVT        .set 23 ; 7+16
 ; R31 event interface mapping, add pru<n>_r31_vec_valid to system event number
 TRIGGER_HOST_I2S_ERR_IRQ        .set TRIGGER_HOST_I2S_ERR_EVT + 16 ; 4+16+16 = 4+32 = 4 + 1<<5
     
-                                .endif
+    .endif
