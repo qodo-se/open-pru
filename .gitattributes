@@ -1,0 +1,18 @@
+# Git attributes file to customize language statistics
+
+# Exclude JavaScript files from language statistics
+*.js linguist-vendored
+
+# Exclude Shell scripts from language statistics
+*.sh linguist-vendored
+
+# Exclude Batch files from language statistics
+*.bat linguist-vendored
+
+# Ensure C files are correctly identified (important for accurate stats)
+*.c linguist-detectable
+*.h linguist-detectable
+
+# Ensure PRU assembly files are correctly identified
+*.asm linguist-detectable
+*.inc linguist-detectable
