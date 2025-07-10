@@ -41,7 +41,7 @@
 #include "ti_open_pru_config.h"
 #include <stdint.h>
 #ifdef SOC_AM263X
-#include "ioexp_tca6416.h"
+#include <board/ioexp_tca6416.h>
 #endif
 #define TEST_PRUI2S0_IDX    ( 0 )   /* Test PRU I2S 0 index */
 #define TEST_PRUI2S1_IDX    ( 1 )   /* Test PRU I2S 1 index */

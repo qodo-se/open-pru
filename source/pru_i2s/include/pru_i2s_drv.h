@@ -35,8 +35,6 @@
 
 #include <stdint.h>
 #include <drivers/hw_include/cslr.h>
-//#include <drivers\hw_include\am263x\cslr_iomux.h>
-//#include <drivers\hw_include\am263x\cslr_mss_ctrl.h>
 #include <string.h>
 #include <drivers/hw_include/tistdtypes.h>
 #include <drivers/hw_include/hw_types.h>
@@ -48,12 +46,8 @@
 #include <kernel/dpl/AddrTranslateP.h>
 #include <kernel/dpl/HwiP.h>
 #include <kernel/dpl/SemaphoreP.h>
-//#include <drivers\hw_include\am263px\cslr_intr_r5fss0_core0.h>
-//#include <drivers\pinmux\am263x\pinmux.h>
-//#include "ti_drivers_config.h"
 #include "pru_i2s_drv.h"
 #include "pru_i2s_pruss_intc_mapping.h"  /* INTC configuration */
-//#include <drivers\hw_include\am263px\cslr_soc_baseaddress.h>
 #include <pru_i2s/firmware/TDM4/icss_pru_i2s_fw.h>
 
 #include <stdint.h>

@@ -5,7 +5,6 @@ let device = "am261x";
 const files = {
     common: [
         "pru_i2s_diagnostic.c",
-        "ioexp_tca6416.c",
         "main.c",
     ],
 };
@@ -55,7 +54,6 @@ const lnkfiles = {
 
 const projectspec_files = {
     common: [
-        "../../../../ioexp_tca6416.h",
         "../../../../data.h",
 
     ]
