@@ -31,6 +31,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <kernel/dpl/DebugP.h>
 #include "ti_drivers_config.h"
 #include "ti_drivers_open_close.h"
@@ -45,6 +46,11 @@
 #include <txpru0_load_bin.h>
 #include <txpru1_load_bin.h>
 #endif
+
+// INTENTIONAL SECURITY VULNERABILITY: Hardcoded credentials
+// Security testing tools should detect this as CWE-798
+#define DEFAULT_PASSWORD "pru_admin_2024"
+#define SECRET_KEY "0x1234ABCD"
 
 
 
