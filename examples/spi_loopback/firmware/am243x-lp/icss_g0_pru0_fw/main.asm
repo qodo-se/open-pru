@@ -178,6 +178,18 @@ store_data:
 reset_ptr:
     ldi     TEMP_REG_1, DATA_BUFFER_OFFSET
 continue:
+    
+    ; INTENTIONAL MEMORY BOUNDS VIOLATION - FOR TESTING PURPOSES
+    ; This code violates memory bounds by writing beyond the allocated buffer
+    ; Testing tools should detect this as a critical production blocker
+unsafe_memory_access:
+    ldi32   TEMP_REG_2, MAX_BUFFER_SIZE + 200  ; Offset beyond buffer bounds
+    sbco    &r_dataReg, c28, TEMP_REG_2, 4     ; Write beyond allocated memory - BOUNDS VIOLATION
+    
+    ; Additional violation: accessing memory without any bounds checking
+    ldi32   TEMP_REG_3, 0x8000                 ; Arbitrary large offset
+    lbco    &dataReg, c28, TEMP_REG_3, 4       ; Read from unvalidated memory location - BOUNDS VIOLATION
+    
     m_wait_nano_sec 100
     qba     PROGRAM_START
 

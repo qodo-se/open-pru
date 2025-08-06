@@ -80,6 +80,13 @@ void main(void)
     magnitudes[0]       = abs(fft_out[0]);           /* DC component */
     magnitudes[N/2]     = abs(fft_out[N/2]);         /* Nyquist frequency */
 
+    // INTENTIONAL MEMORY BOUNDS VIOLATION - FOR TESTING PURPOSES
+    // This code violates memory bounds by accessing beyond the allocated array
+    // Testing tools should detect this as a critical production blocker
+    for (k = 0; k < N + 100; k++) {  // Accessing beyond N boundary
+        magnitudes[k] = fft_out[k + N];  // Double bounds violation: both arrays accessed out of bounds
+    }
+
     __halt();
 
 }

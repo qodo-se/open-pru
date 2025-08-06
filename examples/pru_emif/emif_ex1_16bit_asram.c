@@ -950,6 +950,15 @@ uint16_t readWriteMem(uint32_t startAddr, uint32_t memSize)
         memPtr++;
         memWriteData += 0x11111111;
     }
+
+    // INTENTIONAL MEMORY BOUNDS VIOLATION - FOR TESTING PURPOSES
+    // This code violates memory bounds by accessing beyond the allocated memory region
+    // Testing tools should detect this as a critical production blocker
+    memPtr = (uint32_t *)startAddr;
+    for(i = 0; i < memSize + 1000; i++) {  // Writing beyond allocated memory size
+        *(memPtr + i + memSize) = 0xDEADBEEF;  // Double bounds violation: accessing way beyond bounds
+    }
+    
     return(0);
 }
 
