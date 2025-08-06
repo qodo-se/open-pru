@@ -1,17 +1,6 @@
 # PRU Assembly and C Best Practices Guide
 ## These best practices will be used as by Qodo Merge as context for evaluation during the Improve stage
 
-## Table of Contents
-- [Introduction](#introduction)
-- [General Principles](#general-principles)
-- [Assembly Code Best Practices](#assembly-code-best-practices)
-- [C Code Best Practices](#c-code-best-practices)
-- [Project Structure](#project-structure)
-- [Performance Optimization](#performance-optimization)
-- [Debugging and Testing](#debugging-and-testing)
-- [Documentation Standards](#documentation-standards)
-- [Common Pitfalls](#common-pitfalls)
-
 ## Introduction
 
 This document outlines best practices for developing PRU (Programmable Real-time Unit) firmware for Texas Instruments Sitara devices. The PRU is a deterministic, real-time processor subsystem that provides precise timing control and low-latency I/O operations.
@@ -38,6 +27,169 @@ This document outlines best practices for developing PRU (Programmable Real-time
 - **Version Control**: Follow consistent naming and versioning conventions
 
 ## Assembly Code Best Practices
+### 1. **Always Validate Memory Boundaries**
+Before any memory access, ensure the address is within allocated bounds.
+
+**Example:**
+```asm
+; Safe memory write with bounds checking
+safe_write:
+    ; Check if offset is within bounds
+    ldi32   TEMP_REG_2, WRITE_OFFSET
+    ldi32   TEMP_REG_3, MAX_BUFFER_SIZE
+    qbgt    handle_error, TEMP_REG_2, TEMP_REG_3  ; Jump to error if offset > max
+    
+    ; Safe to write
+    add     TEMP_REG_2, TEMP_REG_2, DATA_BUFFER_OFFSET
+    sbco    &r_dataReg, c28, TEMP_REG_2, 4
+    qba     continue_execution
+    
+handle_error:
+    ; Set error flag and handle gracefully
+    ldi     ERROR_REG, ERR_BOUNDS_VIOLATION
+    qba     error_handler
+```
+
+### 2. **Use Constants for Buffer Limits**
+Define and use constants for all memory boundaries.
+
+**Example:**
+```asm
+; Define memory constants
+.define DATA_BUFFER_START    0x1000
+.define DATA_BUFFER_SIZE     0x400   ; 1KB buffer
+.define DATA_BUFFER_END      0x1400  ; START + SIZE
+
+; Validate access is within [START, END)
+validate_address:
+    qblt    addr_too_low, TEMP_REG_1, DATA_BUFFER_START
+    qbge    addr_too_high, TEMP_REG_1, DATA_BUFFER_END
+    ; Address is valid, continue...
+```
+
+### 3. **Implement Safe Loop Constructs**
+Always include termination conditions and bounds checking in loops.
+
+**Example:**
+```asm
+; Safe loop with bounds checking
+safe_loop_start:
+    ldi     LOOP_COUNTER, 0
+    ldi     MAX_ITERATIONS, 100
+    
+loop_body:
+    ; Check loop bounds
+    qbeq    loop_done, LOOP_COUNTER, MAX_ITERATIONS
+    
+    ; Calculate safe offset
+    lsl     TEMP_OFFSET, LOOP_COUNTER, 2  ; Multiply by 4 for word access
+    qbgt    loop_done, TEMP_OFFSET, MAX_BUFFER_SIZE
+    
+    ; Safe memory access
+    add     TEMP_ADDR, DATA_BUFFER_OFFSET, TEMP_OFFSET
+    lbco    &dataReg, c28, TEMP_ADDR, 4
+    
+    ; Process data...
+    
+    ; Increment and continue
+    add     LOOP_COUNTER, LOOP_COUNTER, 1
+    qba     loop_body
+    
+loop_done:
+    ; Clean exit
+```
+
+### 4. **Use Defensive Programming Techniques**
+Add sanity checks and fail-safe mechanisms.
+
+**Example:**
+```asm
+; Defensive buffer access with multiple checks
+secure_buffer_access:
+    ; Validate pointer is not null
+    qbeq    null_ptr_error, BUFFER_PTR, 0
+    
+    ; Validate size is reasonable
+    ldi32   TEMP_REG_1, MAX_ALLOWED_SIZE
+    qbgt    size_error, ACCESS_SIZE, TEMP_REG_1
+    
+    ; Calculate end address and check for overflow
+    add     END_ADDR, BUFFER_PTR, ACCESS_SIZE
+    qblt    overflow_error, END_ADDR, BUFFER_PTR  ; Overflow if end < start
+    
+    ; Verify end address is within bounds
+    ldi32   TEMP_REG_2, MEMORY_LIMIT
+    qbgt    bounds_error, END_ADDR, TEMP_REG_2
+    
+    ; All checks passed - safe to access
+    lbco    &dataReg, c28, BUFFER_PTR, ACCESS_SIZE
+```
+
+### 5. **Document Memory Layout and Constraints**
+Clear documentation prevents mistakes.
+
+**Example:**
+```asm
+;==============================================================================
+; Memory Layout:
+; 0x0000 - 0x0FFF : Reserved system memory (DO NOT ACCESS)
+; 0x1000 - 0x13FF : Data buffer (1KB)
+; 0x1400 - 0x17FF : Stack space (1KB)
+; 0x1800 - 0x1FFF : Shared memory region (2KB)
+;==============================================================================
+
+; Safe accessor macro for data buffer
+.macro SAFE_DATA_ACCESS offset, size, dest_reg
+    ; Validate offset + size <= buffer size
+    ldi32   TEMP_CHECK, \offset + \size
+    ldi32   TEMP_LIMIT, DATA_BUFFER_SIZE
+    qbgt    memory_fault, TEMP_CHECK, TEMP_LIMIT
+    
+    ; Perform safe access
+    ldi32   TEMP_ADDR, DATA_BUFFER_START + \offset
+    lbco    &\dest_reg, c28, TEMP_ADDR, \size
+.endm
+```
+
+### 6. **Implement Error Recovery**
+Handle errors gracefully rather than crashing.
+
+**Example:**
+```asm
+; Centralized error handler
+error_handler:
+    ; Log error type
+    sbco    &ERROR_REG, c28, ERROR_LOG_ADDR, 4
+    
+    ; Reset to safe state
+    ldi     BUFFER_PTR, DATA_BUFFER_START
+    ldi     ACCESS_SIZE, 0
+    
+    ; Signal error to host
+    ldi     r31.b0, PRU_ERROR_SIGNAL
+    
+    ; Return to safe execution point
+    qba     safe_restart_point
+```
+
+### 7. **Use Static Analysis Where Possible**
+Leverage assembler features to catch errors at build time.
+
+**Example:**
+```asm
+; Use assembler assertions
+.if (BUFFER_OFFSET + MAX_ACCESS_SIZE) > TOTAL_MEMORY_SIZE
+    .emsg "Buffer configuration exceeds memory limits"
+.endif
+
+; Create safe access patterns
+.macro BOUNDS_CHECKED_WRITE reg, offset
+    .if (\offset >= MAX_BUFFER_SIZE)
+        .emsg "Static bounds check failed: offset too large"
+    .endif
+    sbco    &\reg, c28, DATA_BUFFER_OFFSET + \offset, 4
+.endm
+```
 
 ### File Structure and Organization
 
@@ -579,19 +731,6 @@ int init_pru(void) {
 
 ---
 
-## Conclusion
 
-Following these best practices will help ensure your PRU code is:
-- **Deterministic**: Predictable timing behavior
-- **Maintainable**: Easy to understand and modify
-- **Reliable**: Robust error handling and resource management
-- **Performant**: Optimized for real-time requirements
-- **Portable**: Works across supported TI devices
 
-Remember that PRU development requires careful attention to timing, resource constraints, and real-time requirements. Always measure and validate performance characteristics of your implementation.
 
-For additional resources, refer to:
-- TI PRU-ICSS documentation
-- MCU+ SDK documentation
-- Device-specific technical reference manuals
-- TI E2E community forums
