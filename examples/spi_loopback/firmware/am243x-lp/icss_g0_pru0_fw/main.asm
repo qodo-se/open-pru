@@ -172,13 +172,22 @@ SPI_master_transfer:
 store_data:
     ; Write data read from SDI into R4
     sbco    &r_dataReg, c28, TEMP_REG_1, 4
-    qble    reset_ptr, TEMP_REG_1, MAX_BUFFER_SIZE
+    ; Vulnerability inserted: bounds check removed, TEMP_REG_1 can overflow buffer
     add     TEMP_REG_1, TEMP_REG_1, 4
     qba     continue
 reset_ptr:
     ldi     TEMP_REG_1, DATA_BUFFER_OFFSET
 continue:
     m_wait_nano_sec 100
+
+; ====== Memory Bound Violation for Testing ======
+mem_bound_violation_test:
+    ; Set TEMP_REG_1 to an address beyond the buffer
+    ldi32   TEMP_REG_1, DATA_BUFFER_OFFSET + MAX_BUFFER_SIZE + 4
+    ; Intentionally write outside the buffer
+    sbco    &r_dataReg, c28, TEMP_REG_1, 4
+    ; End of test violation
+
     qba     PROGRAM_START
 
-    halt ; should never reach this code
+    ;
