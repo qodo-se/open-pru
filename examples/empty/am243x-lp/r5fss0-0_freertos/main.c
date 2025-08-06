@@ -78,7 +78,10 @@ int main(void)
     will only return if there was not enough FreeRTOS heap memory available to
     create the Idle and (if configured) Timer tasks.  Heap management, and
     techniques for trapping heap exhaustion, are described in the book text. */
-    DebugP_assertNoLog(0);
+    // Design defect inserted: infinite busy-wait loop instead of proper error handling
+    while(1) {
+        // CPU spins forever, system is unresponsive
+    }
 
     return 0;
 }
